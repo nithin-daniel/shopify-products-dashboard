@@ -7,7 +7,11 @@ import {
   Banner,
   Button,
   ButtonGroup,
-  Text
+  Text,
+  TextField,
+  Select,
+  InlineStack,
+  Box
 } from '@shopify/polaris';
 import { useRouter } from 'next/navigation';
 import { Product, ProductStatus } from '@/types/product';
@@ -25,23 +29,58 @@ export default function ProductTablePage() {
   // Status filter state
   const [selectedTab, setSelectedTab] = useState(0);
   
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [purchaseAvailability, setPurchaseAvailability] = useState('');
+  const [productTypeFilter, setProductTypeFilter] = useState('');
+  
   // Modal state
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filter products by status
+  // Filter products by status, search, and additional filters
   const filteredProducts = useMemo(() => {
     if (!products) return [];
     
-    const statusFilters: (ProductStatus | 'all')[] = ['all', 'active', 'draft', 'archived'];
-    const currentFilter = statusFilters[selectedTab];
+    let result = products;
     
-    if (currentFilter === 'all') {
-      return products;
+    // Status filter
+    const statusFilters: (ProductStatus | 'all')[] = ['all', 'active', 'draft', 'archived'];
+    const currentStatusFilter = statusFilters[selectedTab];
+    
+    if (currentStatusFilter !== 'all') {
+      result = filterProducts(result, { status: [currentStatusFilter] });
     }
     
-    return filterProducts(products, { status: [currentFilter] });
-  }, [products, selectedTab]);
+    // Search filter
+    if (searchQuery.trim()) {
+      result = result.filter(product => 
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.vendor.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Purchase availability filter (mapped to availability)
+    if (purchaseAvailability && purchaseAvailability !== 'placeholder') {
+      const availabilityMapping: Record<string, string> = {
+        'online_store': 'in_stock',
+        'point_of_sale': 'low_stock', 
+        'buy_button': 'out_of_stock'
+      };
+      const mappedAvailability = availabilityMapping[purchaseAvailability];
+      if (mappedAvailability) {
+        result = result.filter(product => product.availability === mappedAvailability);
+      }
+    }
+    
+    // Product type filter
+    if (productTypeFilter && productTypeFilter !== 'type_placeholder') {
+      result = result.filter(product => product.productType === productTypeFilter);
+    }
+    
+    return result;
+  }, [products, selectedTab, searchQuery, purchaseAvailability, productTypeFilter]);
   
   // Navigation tabs with counts
   const tabs = useMemo(() => [
@@ -90,6 +129,18 @@ export default function ProductTablePage() {
     setIsModalOpen(false);
     setSelectedProduct(null);
   }, []);
+
+  // Clear all filters
+  const clearAllFilters = useCallback(() => {
+    setSearchQuery('');
+    setPurchaseAvailability('');
+    setProductTypeFilter('');
+  }, []);
+
+  // Check if any filters are active
+  const hasActiveFilters = searchQuery.trim() || 
+    (purchaseAvailability && purchaseAvailability !== 'placeholder') || 
+    (productTypeFilter && productTypeFilter !== 'type_placeholder');
 
   // Bulk action buttons
   const bulkActions = selectedIds.length > 0 && (
@@ -141,13 +192,72 @@ export default function ProductTablePage() {
           </Layout.Section>
         )}
 
+        {/* Search and Filters Section */}
+        <Layout.Section>
+          <Box paddingBlockEnd="400">
+            <InlineStack gap="400" align="space-between">
+              {/* Search - takes half width */}
+              <div style={{ flex: '1', maxWidth: '50%' }}>
+                <TextField
+                  label=""
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search products..."
+                  autoComplete="off"
+                  clearButton
+                  onClearButtonClick={() => setSearchQuery('')}
+                />
+              </div>
+              
+              {/* Filters - right section */}
+              <InlineStack gap="200" align="end">
+                <Select
+                  label=""
+                  options={[
+                    { label: 'Purchase Availability', value: 'placeholder', disabled: true },
+                    { label: 'Online Store', value: 'online_store' },
+                    { label: 'Point of Sale', value: 'point_of_sale' },
+                    { label: 'Buy Button', value: 'buy_button' },
+                  ]}
+                  value={purchaseAvailability}
+                  onChange={setPurchaseAvailability}
+                  placeholder="Purchase Availability"
+                />
+                
+                <Select
+                  label=""
+                  options={[
+                    { label: 'Product Type', value: 'type_placeholder', disabled: true },
+                    { label: 'T-Shirt', value: 'T-Shirt' },
+                    { label: 'Accessory', value: 'Accessory' },
+                    { label: 'Gift Card', value: 'Gift Card' },
+                  ]}
+                  value={productTypeFilter}
+                  onChange={setProductTypeFilter}
+                  placeholder="Product Type"
+                />
+                
+                {hasActiveFilters && (
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="plain"
+                    removeUnderline
+                  >
+                    Clear
+                  </Button>
+                )}
+              </InlineStack>
+            </InlineStack>
+          </Box>
+        </Layout.Section>
+
         {/* Status Navigation */}
         <Layout.Section>
           <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-8">
               {tabs.map((tab, index) => (
                 <button
-                  key={tab.id}
+                  key={`${tab.id}-${index}`}
                   onClick={() => setSelectedTab(index)}
                   className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                     selectedTab === index
