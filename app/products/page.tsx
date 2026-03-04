@@ -94,6 +94,10 @@ export default function ProductsPage() {
           content: 'Modal Demo',
           onAction: () => router.push('/products/modal'),
         },
+        {
+          content: 'Integrated Example',
+          onAction: () => router.push('/products/clean'),
+        },
       ]}
     >
       <Layout>
