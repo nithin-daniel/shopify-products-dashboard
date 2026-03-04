@@ -205,7 +205,6 @@ export const useProductManagement = (): UseProductManagementReturn => {
     try {
       // Simulate bulk delete API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Bulk delete products:', state.selectedProductIds);
       
       // Clear selection and refresh
       clearSelection();
@@ -225,7 +224,6 @@ export const useProductManagement = (): UseProductManagementReturn => {
     try {
       // Simulate export API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Export products:', state.selectedProductIds);
       
       // In a real app, you might download a file or show success message
     } catch (error) {

@@ -137,13 +137,11 @@ export default function ProductTablePage() {
 
   // Handle bulk actions
   const handleBulkAction = useCallback((action: string) => {
-    console.log(`Bulk action: ${action} on products:`, selectedIds);
     // Implement bulk operations here
   }, [selectedIds]);
 
   // Handle individual actions
   const handleAction = useCallback((action: string, product: Product) => {
-    console.log(`Action: ${action} on product:`, product.title);
     
     switch (action) {
       case 'view':
@@ -151,10 +149,8 @@ export default function ProductTablePage() {
         break;
       case 'edit':
         // Navigate to edit page or open edit modal
-        console.log('Edit product:', product.id);
         break;
       default:
-        console.log('Unknown action:', action);
     }
   }, [handleRowClick]);
 

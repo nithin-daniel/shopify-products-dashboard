@@ -41,7 +41,6 @@ const storeEvent = (event: Omit<AnalyticsEvent, 'id' | 'timestamp' | 'sessionId'
   const recentEvents = events.slice(-1000);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(recentEvents));
   
-  console.log('📊 Analytics event stored:', newEvent);
   return newEvent;
 };
 
