@@ -190,26 +190,6 @@ export default function ProductTablePage() {
           product={selectedProduct}
           open={isModalOpen}
           onClose={closeModal}
-          primaryAction={{
-            content: 'Add to Cart',
-            onAction: () => {
-              console.log('Add to cart:', selectedProduct?.title);
-              closeModal();
-            },
-          }}
-          secondaryActions={[
-            {
-              content: 'Edit Product',
-              onAction: () => {
-                console.log('Edit product:', selectedProduct?.id);
-                closeModal();
-              },
-            },
-            {
-              content: 'Close',
-              onAction: closeModal,
-            },
-          ]}
           showCategory={true}
           showRating={true}
           size="large"

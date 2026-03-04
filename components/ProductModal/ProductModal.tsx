@@ -51,23 +51,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   // Default modal title
   const modalTitle = title || product.title;
 
-  // Default actions if none provided
-  const defaultSecondaryActions = secondaryActions.length > 0 
-    ? secondaryActions 
-    : [
-        {
-          content: 'Close',
-          onAction: onClose,
-        },
-      ];
-
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={modalTitle}
       primaryAction={primaryAction}
-      secondaryActions={defaultSecondaryActions}
+      secondaryActions={secondaryActions}
       size={size}
     >
       <Modal.Section>
