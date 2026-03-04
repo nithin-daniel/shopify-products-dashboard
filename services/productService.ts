@@ -19,7 +19,7 @@ export class ProductService {
       baseUrl: 'https://fakestoreapi.com',
       timeout: 10000,
       retryAttempts: 3,
-      ...config,
+      ...config
     };
   }
 
@@ -29,34 +29,25 @@ export class ProductService {
    */
   async getProducts(): Promise<ServiceResponse<Product[]>> {
     try {
-      const response = await this.fetchWithRetry('/products');
-      
+      const response = await fetch(`${this.config.baseUrl}/products`, {
+        signal: AbortSignal.timeout(this.config.timeout!)
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data: ProductsApiResponse = await response.json();
-      
-      // Validate response data
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format: expected array');
-      }
-
-      // Type validation for each product
-      const validatedProducts = data.map(this.validateProduct);
-      
-      // Enrich with mock UI-only fields
-      const enrichedProducts = enrichProductsWithMockData(validatedProducts);
+      const apiProducts: ApiProduct[] = await response.json();
+      const enrichedProducts = enrichProductsWithMockData(apiProducts);
 
       return {
         data: enrichedProducts,
-        success: true,
+        success: true
       };
     } catch (error) {
-      console.error('ProductService.getProducts error:', error);
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch products',
+        success: false
       };
     }
   }
@@ -68,27 +59,25 @@ export class ProductService {
    */
   async getProductById(id: number): Promise<ServiceResponse<Product>> {
     try {
-      const response = await this.fetchWithRetry(`/products/${id}`);
-      
+      const response = await fetch(`${this.config.baseUrl}/products/${id}`, {
+        signal: AbortSignal.timeout(this.config.timeout!)
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data: ApiProduct = await response.json();
-      const validatedProduct = this.validateProduct(data);
-      
-      // Enrich with mock UI-only fields
-      const enrichedProduct = enrichProductWithMockData(validatedProduct);
+      const apiProduct: ApiProduct = await response.json();
+      const enrichedProduct = enrichProductWithMockData(apiProduct);
 
       return {
         data: enrichedProduct,
-        success: true,
+        success: true
       };
     } catch (error) {
-      console.error('ProductService.getProductById error:', error);
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch product',
+        success: false
       };
     }
   }
@@ -100,27 +89,25 @@ export class ProductService {
    */
   async getProductsByCategory(category: string): Promise<ServiceResponse<Product[]>> {
     try {
-      const response = await this.fetchWithRetry(`/products/category/${encodeURIComponent(category)}`);
-      
+      const response = await fetch(`${this.config.baseUrl}/products/category/${category}`, {
+        signal: AbortSignal.timeout(this.config.timeout!)
+      });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data: ProductsApiResponse = await response.json();
-      const validatedProducts = data.map(this.validateProduct);
-      
-      // Enrich with mock UI-only fields
-      const enrichedProducts = enrichProductsWithMockData(validatedProducts);
+      const apiProducts: ApiProduct[] = await response.json();
+      const enrichedProducts = enrichProductsWithMockData(apiProducts);
 
       return {
         data: enrichedProducts,
-        success: true,
+        success: true
       };
     } catch (error) {
-      console.error('ProductService.getProductsByCategory error:', error);
       return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch products by category',
+        success: false
       };
     }
   }
@@ -131,100 +118,34 @@ export class ProductService {
    */
   async getCategories(): Promise<ServiceResponse<string[]>> {
     try {
-      const response = await this.fetchWithRetry('/products/categories');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: string[] = await response.json();
-
-      return {
-        data: data,
-        success: true,
-      };
-    } catch (error) {
-      console.error('ProductService.getCategories error:', error);
-      return {
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        success: false,
-      };
-    }
-  }
-
-  /**
-   * Fetch with retry mechanism and timeout
-   * @private
-   */
-  private async fetchWithRetry(
-    endpoint: string, 
-    attempt: number = 1
-  ): Promise<Response> {
-    const url = `${this.config.baseUrl}${endpoint}`;
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
-
-    try {
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch(`${this.config.baseUrl}/products/categories`, {
+        signal: AbortSignal.timeout(this.config.timeout!)
       });
 
-      clearTimeout(timeoutId);
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (attempt < (this.config.retryAttempts || 3)) {
-        console.warn(`Request failed, retrying (${attempt}/${this.config.retryAttempts})...`);
-        await this.delay(Math.pow(2, attempt) * 1000); // Exponential backoff
-        return this.fetchWithRetry(endpoint, attempt + 1);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
-      throw error;
+
+      const categories: string[] = await response.json();
+
+      return {
+        data: categories,
+        success: true
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Failed to fetch categories',
+        success: false
+      };
     }
   }
 
   /**
-   * Validates product data structure
-   * @private
+   * Updates service configuration
+   * @param newConfig - Partial configuration to merge
    */
-  private validateProduct(product: any): ApiProduct {
-    if (!product || typeof product !== 'object') {
-      throw new Error('Invalid product data');
-    }
-
-    const requiredFields = ['id', 'title', 'price', 'description', 'category', 'image', 'rating'];
-    const missingFields = requiredFields.filter(field => !(field in product));
-    
-    if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-    }
-
-    // Type coercion and validation
-    return {
-      id: Number(product.id),
-      title: String(product.title),
-      price: Number(product.price),
-      description: String(product.description),
-      category: String(product.category),
-      image: String(product.image),
-      rating: {
-        rate: Number(product.rating?.rate || 0),
-        count: Number(product.rating?.count || 0),
-      },
-    };
-  }
-
-  /**
-   * Utility delay function
-   * @private
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  updateConfig(newConfig: Partial<ProductServiceConfig>) {
+    this.config = { ...this.config, ...newConfig };
   }
 }
 

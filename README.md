@@ -32,29 +32,19 @@ shopify-dashboard/
 │   │   └── page.tsx              # Analytics dashboard
 │   ├── products/
 │   │   ├── page.tsx              # Products overview
-│   │   ├── table/
-│   │   │   └── page.tsx          # Product table view
-│   │   ├── modal/
-│   │   │   └── page.tsx          # Product modal demo
-│   │   ├── integrated/
-│   │   │   └── page.tsx          # Integrated product view
-│   │   ├── clean/
-│   │   │   └── page.tsx          # Clean product interface
-│   │   ├── extensions-demo/
-│   │   │   └── page.tsx          # Product extensions demo
-│   │   └── analytics-demo/
-│   │       └── page.tsx          # Analytics integration demo
-│   └── components/               # Shared components
-├── lib/                          # Utility libraries
-│   ├── analytics/                # Analytics system
-│   │   ├── index.ts              # Analytics hooks and exports
-│   │   ├── service.ts            # Core analytics service
-│   │   ├── types.ts              # Analytics type definitions
-│   │   └── helpers.ts            # Analytics helper functions
-│   └── utils/                    # Utility functions
+│   │   └── table/
+│   │       └── page.tsx          # Product table view
+│   └── components/               # App-specific components
+├── components/                   # Shared components
+│   ├── ProductTable/             # Product table component
+│   ├── ProductModal/             # Product modal component
+│   └── ProductTableSkeleton/     # Loading skeleton
+├── lib/                          # Core libraries
+│   └── analytics/                # Analytics system
+├── hooks/                        # Custom React hooks
 ├── types/                        # TypeScript type definitions
-├── utils/                        # Additional utilities
-└── hooks/                        # Custom React hooks
+├── utils/                        # Utility functions
+└── public/                       # Static assets
 ```
 
 ## 🌐 Routes & Navigation
@@ -72,11 +62,6 @@ shopify-dashboard/
 |-------|-----------|-------------|
 | `/products` | `app/products/page.tsx` | Products overview and navigation hub |
 | `/products/table` | `app/products/table/page.tsx` | Dedicated product table view (mirrors main dashboard functionality) |
-| `/products/modal` | `app/products/modal/page.tsx` | Product management with modal interactions |
-| `/products/integrated` | `app/products/integrated/page.tsx` | Integrated product management interface |
-| `/products/clean` | `app/products/clean/page.tsx` | Simplified product interface |
-| `/products/extensions-demo` | `app/products/extensions-demo/page.tsx` | Demo of product type extensions and UI fields |
-| `/products/analytics-demo` | `app/products/analytics-demo/page.tsx` | Analytics integration demonstration |
 
 ### Key Features by Route
 

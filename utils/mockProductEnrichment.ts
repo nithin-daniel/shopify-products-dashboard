@@ -1,72 +1,68 @@
-import { Product, ApiProduct, ProductStatus, ProductAvailability, MOCK_VENDORS, PRODUCT_TYPES } from '@/types/product';
+import { 
+  Product, 
+  ApiProduct, 
+  ProductStatus, 
+  ProductAvailability,
+  MOCK_VENDORS,
+  PRODUCT_TYPES 
+} from '@/types/product';
 
 /**
- * Enriches API products with mock UI-only fields for demo purposes.
- * Uses deterministic randomization based on product ID for consistency.
+ * Deterministic seeded random number generator
  */
-
-// Seeded random function for consistent results
 function seededRandom(seed: number): number {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
 
-// Get random item from array using seeded random
-function getRandomItem<T>(array: readonly T[], seed: number): T {
-  const index = Math.floor(seededRandom(seed) * array.length);
-  return array[index];
-}
-
-// Generate mock status based on product ID
+/**
+ * Generate mock status based on product ID
+ */
 function generateMockStatus(productId: number): ProductStatus {
   const statuses: ProductStatus[] = ['active', 'draft', 'archived'];
-  // 70% active, 20% draft, 10% archived
-  const rand = seededRandom(productId * 1.1);
-  if (rand < 0.7) return 'active';
-  if (rand < 0.9) return 'draft';
-  return 'archived';
+  const index = Math.floor(seededRandom(productId * 1.1) * statuses.length);
+  return statuses[index];
 }
 
-// Generate mock availability based on product rating
-function generateMockAvailability(productId: number, rating: number): ProductAvailability {
-  const availabilities: ProductAvailability[] = ['in_stock', 'low_stock', 'out_of_stock'];
-  // Higher rated products more likely to be in stock
-  const rand = seededRandom(productId * 1.3);
-  const ratingBonus = rating > 4 ? 0.2 : rating > 3 ? 0.1 : 0;
-  
-  if (rand + ratingBonus < 0.7) return 'in_stock';
-  if (rand + ratingBonus < 0.9) return 'low_stock';
-  return 'out_of_stock';
-}
-
-// Generate mock vendor based on category
+/**
+ * Generate mock vendor based on product ID and category
+ */
 function generateMockVendor(productId: number, category: string): string {
-  const categoryKey = category as keyof typeof MOCK_VENDORS;
-  const vendors = MOCK_VENDORS[categoryKey] || ['Generic Brand'];
-  return getRandomItem(vendors, productId * 1.5);
+  const vendors = MOCK_VENDORS[category as keyof typeof MOCK_VENDORS] || ['Generic Store'];
+  const index = Math.floor(seededRandom(productId * 2.3) * vendors.length);
+  return vendors[index];
 }
 
-// Generate mock product type based on category and title
+/**
+ * Generate mock product type
+ */
 function generateMockProductType(productId: number, category: string, title: string): string {
-  // Use the filter options that exist in the UI
-  const filterOptions = ['T-Shirt', 'Accessory', 'Gift Card'];
+  const types = PRODUCT_TYPES[category as keyof typeof PRODUCT_TYPES] || ['General Item'];
   
-  // Try to match type based on title keywords
+  // Try to match based on title keywords first
   const titleLower = title.toLowerCase();
+  for (const type of types) {
+    if (titleLower.includes(type.toLowerCase())) {
+      return type;
+    }
+  }
   
-  // Smart matching for common keywords
-  if (titleLower.includes('shirt') || titleLower.includes('t-shirt')) return 'T-Shirt';
-  if (titleLower.includes('jacket') || titleLower.includes('coat')) return 'T-Shirt';
-  if (titleLower.includes('ring') || titleLower.includes('necklace') || titleLower.includes('jewelery')) return 'Accessory';
-  if (titleLower.includes('backpack') || titleLower.includes('bag')) return 'Accessory';
+  // Fallback to seeded random
+  const index = Math.floor(seededRandom(productId * 3.7) * types.length);
+  return types[index];
+}
+
+/**
+ * Generate mock availability based on product ID and rating
+ */
+function generateMockAvailability(productId: number, rating: number): ProductAvailability {
+  // Higher rated products more likely to be in stock
+  const ratingBonus = rating > 4.0 ? 0.3 : rating > 3.0 ? 0.1 : 0;
+  const randomValue = seededRandom(productId * 4.1) + ratingBonus;
   
-  // For some products, make them gift cards
-  const rand = seededRandom(productId * 2.1);
-  if (rand < 0.15) return 'Gift Card'; // 15% chance for gift cards
-  
-  // Distribute remaining between T-Shirt and Accessory
-  const nonGiftOptions = ['T-Shirt', 'Accessory'];
-  return getRandomItem(nonGiftOptions, productId * 1.7);
+  if (randomValue > 0.8) return 'in_stock';
+  if (randomValue > 0.4) return 'low_stock';
+  return 'out_of_stock';
 }
 
 /**

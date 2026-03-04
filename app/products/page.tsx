@@ -13,20 +13,11 @@ import {
   Banner
 } from '@shopify/polaris';
 import { useRouter } from 'next/navigation';
-import { Product } from '@/services';
 import { useProducts } from '@/hooks';
-import { useAnalytics } from '@/lib/analytics';
-import { useEffect } from 'react';
 
 export default function ProductsPage() {
   const router = useRouter();
-  const { track } = useAnalytics();
   const { products, loading, error, refreshProducts } = useProducts();
-
-  useEffect(() => {
-    // Track page load
-    track.pageView('/products', 'Products Page');
-  }, [track]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -138,13 +129,7 @@ export default function ProductsPage() {
                       variant="primary" 
                       size="slim"
                       onClick={() => {
-                        track.productClick(product.id.toString(), products.indexOf(product));
-                        track.userAction('view_details', 'product', {
-                          productId: product.id,
-                          productTitle: product.title,
-                          category: product.category,
-                          price: product.price
-                        });
+                        console.log('View Details clicked for product:', product.title);
                       }}
                     >
                       View Details
