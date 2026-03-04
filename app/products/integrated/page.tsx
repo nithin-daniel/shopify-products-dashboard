@@ -10,11 +10,15 @@ import {
   Text,
   Card,
   BlockStack,
+  Spinner,
+  EmptyState,
+  InlineStack,
+  Box,
 } from '@shopify/polaris';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types/product';
 import { useProducts } from '@/hooks';
-import { ProductTable, ProductModal } from '@/components';
+import { ProductTable, ProductModal, ProductTableSkeleton } from '@/components';
 
 /**
  * Integrated Products Management Page
@@ -178,126 +182,220 @@ export default function IntegratedProductsPage() {
     setSelectedProductIds([]);
   }, []);
 
-  // Bulk actions section
-  const bulkActionsSection = selectedProductIds.length > 0 && (
-    <Layout.Section>
-      <Card>
-        <BlockStack gap="300">
-          <Text variant="headingSm" as="h3">
-            {selectedProductIds.length} product{selectedProductIds.length > 1 ? 's' : ''} selected
-          </Text>
-          
-          <ButtonGroup>
-            <Button
-              onClick={handleBulkExport}
-              loading={actionLoading.exportProducts}
-              disabled={Object.values(actionLoading).some(Boolean)}
-            >
-              Export Selected
-            </Button>
+  // Loading state - show spinner while fetching products
+  if (loading && products.length === 0) {
+    return (
+      <Page title="Product Management" backAction={{ content: 'Dashboard', onAction: () => router.push('/') }}>
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <Box paddingBlock="800">
+                <BlockStack gap="400" align="center">
+                  <Spinner accessibilityLabel="Loading products" size="large" />
+                  <Text variant="bodyMd" as="p" tone="subdued" alignment="center">
+                    Loading your products...
+                  </Text>
+                </BlockStack>
+              </Box>
+            </Card>
             
-            <Button
-              onClick={handleBulkDelete}
-              loading={actionLoading.deleteProducts}
-              disabled={Object.values(actionLoading).some(Boolean)}
-              tone="critical"
+            {/* Show skeleton table for better perceived performance */}
+            <ProductTableSkeleton />
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
+
+  // Empty state - show when no products are available
+  if (!loading && products.length === 0 && !error) {
+    return (
+      <Page 
+        title="Product Management" 
+        primaryAction={{
+          content: 'Add First Product',
+          onAction: () => console.log('Add first product'),
+        }}
+        backAction={{ content: 'Dashboard', onAction: () => router.push('/') }}
+      >
+        <Layout>
+          <Layout.Section>
+            <EmptyState
+              heading="No products yet"
+              action={{
+                content: 'Add Product',
+                onAction: () => console.log('Add product'),
+              }}
+              secondaryAction={{
+                content: 'Learn more',
+                onAction: () => console.log('Learn more'),
+              }}
+              image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
             >
-              Delete Selected
-            </Button>
-            
-            <Button
-              onClick={clearSelection}
-              disabled={Object.values(actionLoading).some(Boolean)}
-            >
-              Clear Selection
-            </Button>
-          </ButtonGroup>
-        </BlockStack>
-      </Card>
-    </Layout.Section>
-  );
+              <p>Start by adding your first product to begin managing your inventory.</p>
+            </EmptyState>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
+
+  // Check if any action is loading
+  const isAnyActionLoading = Object.values(actionLoading).some(Boolean);
 
   return (
     <Page
       title="Product Management"
-      subtitle={`${products.length} products available`}
+      subtitle={loading ? 'Loading...' : `${products.length} product${products.length !== 1 ? 's' : ''} ${selectedProductIds.length > 0 ? `• ${selectedProductIds.length} selected` : ''}`}
       primaryAction={{
         content: 'Add Product',
         onAction: () => console.log('Add new product'),
       }}
       secondaryActions={[
         {
-          content: 'Refresh',
+          content: loading ? 'Refreshing...' : 'Refresh',
           onAction: refreshProducts,
           loading: loading,
+          disabled: isAnyActionLoading,
         },
         {
           content: 'Import Products',
           onAction: () => console.log('Import products'),
+          disabled: isAnyActionLoading,
         },
         {
-          content: 'Export All',
-          onAction: () => console.log('Export all products'),
+          content: 'Settings',
+          onAction: () => console.log('Product settings'),
         },
       ]}
-      backAction={{
-        content: 'Dashboard',
-        onAction: () => router.push('/'),
-      }}
+      backAction={{ content: 'Dashboard', onAction: () => router.push('/') }}
     >
       <Layout>
-        {/* Error Banner */}
+        {/* Enhanced Error State */}
         {error && (
           <Layout.Section>
             <Banner
-              title="Error loading products"
+              title="Unable to load products"
               tone="critical"
               action={{
-                content: 'Retry',
+                content: 'Try Again',
                 onAction: refreshProducts,
+                loading: loading,
               }}
-              onDismiss={() => window.location.reload()}
+              secondaryAction={{
+                content: 'Contact Support',
+                onAction: () => console.log('Contact support'),
+              }}
             >
-              <p>{error}</p>
+              <BlockStack gap="200">
+                <Text as="p">{error}</Text>
+                <Text as="p" tone="subdued">
+                  Check your internet connection or try refreshing the page.
+                </Text>
+              </BlockStack>
             </Banner>
           </Layout.Section>
         )}
 
-        {/* Bulk Actions Section */}
-        {bulkActionsSection}
+        {/* Enhanced Bulk Actions Section */}
+        {selectedProductIds.length > 0 && (
+          <Layout.Section>
+            <Card>
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="100">
+                  <Text variant="headingSm" as="h3">
+                    {selectedProductIds.length} item{selectedProductIds.length !== 1 ? 's' : ''} selected
+                  </Text>
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Choose an action to apply to selected products
+                  </Text>
+                </BlockStack>
+                
+                <ButtonGroup>
+                  <Button
+                    onClick={handleBulkExport}
+                    loading={actionLoading.exportProducts}
+                    disabled={Object.values(actionLoading).some(Boolean)}
+                    icon="<svg viewBox='0 0 20 20'><path d='M10 3l5 5h-3v6h-4V8H5l5-5z'/></svg>"
+                  >
+                    Export
+                  </Button>
+                  
+                  <Button
+                    onClick={handleBulkDelete}
+                    loading={actionLoading.deleteProducts}
+                    disabled={Object.values(actionLoading).some(Boolean)}
+                    tone="critical"
+                  >
+                    Delete
+                  </Button>
+                  
+                  <Button
+                    onClick={clearSelection}
+                    disabled={Object.values(actionLoading).some(Boolean)}
+                    variant="plain"
+                  >
+                    Clear
+                  </Button>
+                </ButtonGroup>
+              </InlineStack>
+            </Card>
+          </Layout.Section>
+        )}
 
-        {/* Product Table */}
+        {/* Product Table with Enhanced Loading State */}
         <Layout.Section>
-          <ProductTable
-            products={products}
-            loading={loading}
-            selectable={true}
-            selectedIds={selectedProductIds}
-            onSelectionChange={handleSelectionChange}
-            onRowClick={handleRowClick}
-            onAction={handleProductAction}
-            showActions={true}
-            emptyStateMessage="No products found. Add some products to get started."
-          />
+          <Card padding="0">
+            {loading && products.length > 0 && (
+              <Box paddingInline="400" paddingBlock="200">
+                <InlineStack gap="200" align="center">
+                  <Spinner size="small" />
+                  <Text variant="bodySm" as="span" tone="subdued">
+                    Refreshing products...
+                  </Text>
+                </InlineStack>
+              </Box>
+            )}
+            
+            <ProductTable
+              products={products}
+              loading={loading && products.length === 0}
+              selectable={true}
+              selectedIds={selectedProductIds}
+              onSelectionChange={handleSelectionChange}
+              onRowClick={handleRowClick}
+              onAction={handleProductAction}
+              showActions={true}
+              emptyStateMessage="No products found. Start by adding your first product to build your inventory."
+            />
+          </Card>
         </Layout.Section>
 
-        {/* Product Detail Modal */}
+        {/* Enhanced Product Detail Modal */}
         <ProductModal
           product={selectedProduct}
           open={isModalOpen}
           onClose={closeModal}
           primaryAction={{
-            content: 'Add to Cart',
+            content: actionLoading.addToCart ? 'Adding to Cart...' : 'Add to Cart',
             onAction: handleAddToCart,
             loading: actionLoading.addToCart,
-            disabled: Object.values(actionLoading).some(Boolean),
+            disabled: isAnyActionLoading,
           }}
           secondaryActions={[
             {
-              content: 'Edit Product',
+              content: actionLoading.editProduct ? 'Opening Editor...' : 'Edit Product',
               onAction: handleEditProduct,
               loading: actionLoading.editProduct,
-              disabled: Object.values(actionLoading).some(Boolean),
+              disabled: isAnyActionLoading,
+            },
+            {
+              content: 'Duplicate',
+              onAction: () => {
+                console.log('Duplicate product:', selectedProduct?.id);
+                closeModal();
+              },
+              disabled: isAnyActionLoading,
             },
             {
               content: 'Share',
@@ -310,6 +408,7 @@ export default function IntegratedProductsPage() {
                   }).catch(console.error);
                 }
               },
+              disabled: isAnyActionLoading,
             },
             {
               content: 'Close',
