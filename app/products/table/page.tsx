@@ -20,12 +20,14 @@ import {
 import { useRouter } from 'next/navigation';
 import { Product, ProductStatus } from '@/types/product';
 import { useProducts } from '@/hooks';
+import { useAnalytics } from '@/lib/analytics';
 import { ProductTable, ProductModal } from '@/components';
 import { filterProducts } from '@/utils/productFilters';
 
 export default function ProductTablePage() {
   const router = useRouter();
   const { products, loading, error } = useProducts();
+  const { track } = useAnalytics();
   
   // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -36,10 +38,13 @@ export default function ProductTablePage() {
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Handle search
+  // Handle search with analytics
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
-  }, []);
+    if (value.length > 2) {
+      track.userAction('search', 'search-field', { query: value });
+    }
+  }, [track]);
   const [purchaseAvailability, setPurchaseAvailability] = useState<string[]>([]);
   const [productTypeFilter, setProductTypeFilter] = useState<string[]>([]);
   const [vendorFilter, setVendorFilter] = useState<string[]>([]);
@@ -113,9 +118,17 @@ export default function ProductTablePage() {
 
   // Handle row click
   const handleRowClick = useCallback((product: Product) => {
+    // Track product interactions
+    track.userAction('product_click', 'product', { 
+      productId: product.id.toString(), 
+      productTitle: product.title,
+      productCategory: product.category 
+    });
+    track.userAction('modal_open', 'modal', { modalType: 'product-detail' });
+    
     setSelectedProduct(product);
     setIsModalOpen(true);
-  }, []);
+  }, [track]);
 
   // Handle selection changes
   const handleSelectionChange = useCallback((ids: string[]) => {
@@ -147,9 +160,10 @@ export default function ProductTablePage() {
 
   // Close modal
   const handleCloseModal = useCallback(() => {
+    track.modalClose('product-detail');
     setIsModalOpen(false);
     setSelectedProduct(null);
-  }, []);
+  }, [track]);
 
   // Bulk action buttons
   const bulkActions = selectedIds.length > 0 && (

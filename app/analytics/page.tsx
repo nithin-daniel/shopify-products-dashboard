@@ -17,9 +17,11 @@ import {
   ChartVerticalIcon
 } from '@shopify/polaris-icons';
 import { useRouter } from 'next/navigation';
+import { useAnalytics } from '@/lib/analytics';
 
 export default function AnalyticsPage() {
   const router = useRouter();
+  const { track, getEvents, clearEvents } = useAnalytics();
 
   return (
     <Page
