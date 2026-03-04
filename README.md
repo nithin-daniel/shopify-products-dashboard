@@ -5,7 +5,7 @@ A modern, feature-rich Shopify-style dashboard built with Next.js 16, React 19, 
 ## 🚀 Features
 
 - **Product Management**: Advanced product table with search, filtering, and analytics tracking
-- **Analytics Dashboard**: Real-time analytics with event tracking and metrics visualization
+- **Analytics Dashboard**: Real-time analytics with localStorage-based event tracking and live metrics visualization
 - **Advanced Filtering**: Multi-level filtering with search, checkbox popovers, and collapsible sidebar filters
 - **Mock Data Integration**: Seamless integration with FakeStore API enhanced with UI-specific fields
 - **Responsive Design**: Built with Shopify Polaris for consistent, professional UI
@@ -17,7 +17,7 @@ A modern, feature-rich Shopify-style dashboard built with Next.js 16, React 19, 
 - **UI Library**: Shopify Polaris 13.9.5
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
-- **Analytics**: Custom lightweight analytics service with localStorage
+- **Analytics**: Lightweight localStorage-based analytics with real-time event tracking
 - **Data**: FakeStore API integration with mock data enrichment
 
 ## 📁 Project Structure
@@ -77,11 +77,12 @@ shopify-dashboard/
 - **Status Navigation**: Tabs for filtering by product status (Active, Draft, Archived)
 
 #### `/analytics` (Internal Dashboard)
-- **Key Metrics**: Total product clicks, modal opens, and session tracking
-- **Event Visualization**: Detailed analytics events table with timestamps and metadata
-- **Most Viewed Products**: Ranking of products by interaction frequency
-- **Data Management**: Tools for clearing analytics data and generating test events
-- **Debug Capabilities**: Enhanced logging and troubleshooting features
+- **Live Metrics**: Real-time product clicks, modal opens, and session tracking
+- **Event History**: Recent activity table showing last 10 interactions with timestamps
+- **Session Analytics**: Unique session tracking and user engagement metrics
+- **Test Data Generation**: Built-in test data generator for demonstration
+- **Data Management**: Clear analytics data and refresh functionality
+- **LocalStorage Persistence**: Analytics data persists across browser sessions
 
 ## 🔧 Installation & Setup
 
@@ -137,10 +138,11 @@ npm start
 - **Filter Architecture**: Multi-level filtering system with search, checkboxes, and sidebar filters
 
 ### Analytics System
-- **Event Tracking**: Comprehensive tracking of user interactions, page views, and product engagement
-- **LocalStorage Backend**: Lightweight analytics service using browser localStorage
-- **Real-time Metrics**: Dynamic calculation of analytics metrics with filtering and aggregation
-- **Debug Capabilities**: Enhanced logging and troubleshooting tools for development
+- **Real-time Event Tracking**: Captures user interactions, page views, and product engagement instantly
+- **LocalStorage Persistence**: Events stored in browser localStorage for session persistence
+- **Live Metrics Dashboard**: Dynamic calculation and display of analytics metrics
+- **Session Management**: Automatic session tracking with unique identifiers
+- **Performance Optimized**: Async state updates prevent render loops and ensure smooth UX
 
 ### UI/UX Features
 - **Shopify Polaris Integration**: Professional, consistent design system
@@ -150,12 +152,14 @@ npm start
 
 ## 📊 Analytics Events
 
-The application tracks several types of analytics events:
+The application tracks analytics events in real-time using localStorage:
 
-- **Page Views**: Navigation and route changes
-- **User Actions**: Product clicks, filter interactions, search queries
-- **Product Interactions**: Individual product engagement and modal opens
-- **Session Tracking**: User session management and duration
+- **Page Views**: Automatic tracking of route navigation and page loads
+- **Product Interactions**: Click events on products with metadata (ID, title, category)
+- **Modal Events**: Open/close tracking for product detail modals
+- **User Actions**: Search queries, filter applications, and interface interactions
+- **Session Data**: Unique session identification and user engagement metrics
+- **Event Persistence**: All events stored locally and persist across browser sessions
 
 ## 🔍 Search & Filtering
 
@@ -204,8 +208,9 @@ No environment variables are required for basic functionality. The application u
 
 ### Customization
 - Product fields can be extended in `types/product.ts`
-- Analytics events can be customized in `lib/analytics/types.ts`
+- Analytics events can be customized in `lib/analytics/index.ts`
 - UI components can be modified using Shopify Polaris theming
+- Mock data generation can be adjusted in `utils/mockProductEnrichment.ts`
 
 ## 🤝 Contributing
 
