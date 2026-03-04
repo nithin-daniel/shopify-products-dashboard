@@ -1,24 +1,148 @@
-// Simple analytics placeholder for clean UI experience
+import { useState, useEffect } from 'react';
+
+// Analytics event types
+export interface AnalyticsEvent {
+  id: string;
+  timestamp: number;
+  type: 'page_view' | 'user_action';
+  data: {
+    action: string;
+    target: string;
+    metadata?: any;
+  };
+  sessionId: string;
+}
+
+// Simple session management
+const getSessionId = () => {
+  let sessionId = localStorage.getItem('analytics-session');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('analytics-session', sessionId);
+  }
+  return sessionId;
+};
+
+// Analytics storage key
+const STORAGE_KEY = 'analytics-events';
+
+// Store event in localStorage
+const storeEvent = (event: Omit<AnalyticsEvent, 'id' | 'timestamp' | 'sessionId'>) => {
+  const events = getStoredEvents();
+  const newEvent: AnalyticsEvent = {
+    ...event,
+    id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    timestamp: Date.now(),
+    sessionId: getSessionId()
+  };
+  
+  events.push(newEvent);
+  // Keep only last 1000 events
+  const recentEvents = events.slice(-1000);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(recentEvents));
+  
+  console.log('📊 Analytics event stored:', newEvent);
+  return newEvent;
+};
+
+// Get stored events
+const getStoredEvents = (): AnalyticsEvent[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Clear all events
+const clearStoredEvents = () => {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('analytics-session');
+};
+
 export const useAnalytics = () => {
-  return {
-    track: {
-      pageView: (path: string, title: string) => {
-        console.log(`📊 Page view: ${path} - ${title}`);
-      },
-      userAction: (action: string, target: string, metadata?: any) => {
-        console.log(`🔥 User action: ${action} on ${target}`, metadata);
-      },
-      productClick: (productId: string, index: number) => {
-        console.log(`🛍️ Product click: ${productId} at index ${index}`);
-      },
-      modalOpen: (modalType: string) => {
-        console.log(`📱 Modal opened: ${modalType}`);
-      },
-      modalClose: (modalType: string) => {
-        console.log(`❌ Modal closed: ${modalType}`);
-      }
+  const [events, setEvents] = useState<AnalyticsEvent[]>([]);
+
+  const loadEvents = () => {
+    setEvents(getStoredEvents());
+  };
+
+  useEffect(() => {
+    loadEvents();
+    // Listen for storage changes to update events in real-time
+    const handleStorageChange = () => loadEvents();
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const track = {
+    pageView: (path: string, title: string) => {
+      storeEvent({
+        type: 'page_view',
+        data: {
+          action: 'page_view',
+          target: 'page',
+          metadata: { path, title }
+        }
+      });
+      loadEvents(); // Refresh events
     },
-    getEvents: () => Promise.resolve([]),
-    clearEvents: () => Promise.resolve()
+    userAction: (action: string, target: string, metadata?: any) => {
+      storeEvent({
+        type: 'user_action',
+        data: {
+          action,
+          target,
+          metadata
+        }
+      });
+      loadEvents(); // Refresh events
+    },
+    productClick: (productId: string, index: number) => {
+      storeEvent({
+        type: 'user_action',
+        data: {
+          action: 'product_click',
+          target: 'product',
+          metadata: { productId, index }
+        }
+      });
+      loadEvents(); // Refresh events
+    },
+    modalOpen: (modalType: string) => {
+      storeEvent({
+        type: 'user_action',
+        data: {
+          action: 'modal_open',
+          target: 'modal',
+          metadata: { modalType }
+        }
+      });
+      loadEvents(); // Refresh events
+    },
+    modalClose: (modalType: string) => {
+      storeEvent({
+        type: 'user_action',
+        data: {
+          action: 'modal_close',
+          target: 'modal',
+          metadata: { modalType }
+        }
+      });
+      loadEvents(); // Refresh events
+    }
+  };
+
+  return {
+    track,
+    events,
+    getEvents: () => Promise.resolve(getStoredEvents()),
+    clearEvents: () => {
+      clearStoredEvents();
+      loadEvents();
+      return Promise.resolve();
+    },
+    refreshEvents: loadEvents
   };
 };
