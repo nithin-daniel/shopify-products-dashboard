@@ -172,12 +172,6 @@ export default function ProductTablePage() {
     <Page
       title="Products Table"
       subtitle={`${filteredProducts.length} products in table format`}
-      secondaryActions={[
-        {
-          content: 'Add Product',
-          onAction: () => console.log('Add product'),
-        },
-      ]}
     >
       <Layout>
         {error && (
