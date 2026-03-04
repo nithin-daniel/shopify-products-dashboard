@@ -15,16 +15,20 @@ import {
 } from '@shopify/polaris';
 import { useRouter } from 'next/navigation';
 import { Product, productService } from '@/services';
+import { useAnalytics } from '@/lib/analytics';
 
 export default function ProductsPage() {
   const router = useRouter();
+  const { track } = useAnalytics();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    // Track page load
+    track.pageView('/products', 'Products Page');
+  }, [track]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -144,7 +148,19 @@ export default function ProductsPage() {
                   </Text>
 
                   <InlineStack align="end">
-                    <Button variant="primary" size="slim">
+                    <Button 
+                      variant="primary" 
+                      size="slim"
+                      onClick={() => {
+                        track.productClick(product.id.toString(), products.indexOf(product));
+                        track.userAction('view_details', 'product', {
+                          productId: product.id,
+                          productTitle: product.title,
+                          category: product.category,
+                          price: product.price
+                        });
+                      }}
+                    >
                       View Details
                     </Button>
                   </InlineStack>

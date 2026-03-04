@@ -14,6 +14,30 @@ import { EventFilter, AnalyticsEvent } from './types';
 export const useAnalytics = () => {
   const pathname = usePathname();
 
+  // Session tracking - runs once per app load
+  useEffect(() => {
+    // Track session start
+    trackUserAction('session_start', 'application', {
+      timestamp: Date.now(),
+      userAgent: navigator.userAgent,
+      sessionId: analytics.getSessionId()
+    });
+
+    // Track session end on page unload
+    const handleBeforeUnload = () => {
+      trackUserAction('session_end', 'application', {
+        timestamp: Date.now(),
+        sessionId: analytics.getSessionId()
+      });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []); // Empty dependency array - runs once per app load
+
   // Auto-track page views
   useEffect(() => {
     if (pathname) {

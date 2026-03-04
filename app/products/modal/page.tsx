@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Page,
   Layout,
@@ -15,24 +15,42 @@ import { useRouter } from 'next/navigation';
 import { Product } from '@/types/product';
 import { useProducts } from '@/hooks';
 import { ProductModal } from '@/components';
+import { useAnalytics } from '@/lib/analytics';
 
 export default function ProductModalExamplePage() {
   const router = useRouter();
+  const { track } = useAnalytics();
   const { products, loading } = useProducts();
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSize, setModalSize] = useState<'small' | 'large'>('small');
+  const [modalOpenTime, setModalOpenTime] = useState<number>(0);
+
+  // Track page load
+  useEffect(() => {
+    track.pageView('/products/modal', 'Product Modal Demo');
+  }, [track]);
 
   const openModal = (product: Product, size: 'small' | 'large' = 'small') => {
+    const openTime = Date.now();
+    setModalOpenTime(openTime);
     setSelectedProduct(product);
     setModalSize(size);
     setIsModalOpen(true);
+    
+    // Track modal open
+    track.modalOpen(`product-modal-${size}`);
+    track.productView(product.id.toString(), product.title);
   };
 
   const closeModal = () => {
+    const duration = modalOpenTime ? Date.now() - modalOpenTime : undefined;
     setIsModalOpen(false);
     setSelectedProduct(null);
+    
+    // Track modal close with duration
+    track.modalClose(`product-modal-${modalSize}`, duration);
   };
 
   const handleAddToCart = () => {
