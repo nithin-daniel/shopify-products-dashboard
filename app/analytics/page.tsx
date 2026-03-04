@@ -58,6 +58,33 @@ export default function AnalyticsPage() {
     setLoading(false);
   };
 
+  // Test function to generate sample events
+  const generateTestEvents = async () => {
+    const { trackUserAction } = await import('@/lib/analytics/helpers');
+    
+    // Generate test events
+    await trackUserAction('product_click', 'product', { 
+      productId: '1', 
+      productTitle: 'Test Product 1',
+      productName: 'Test Product 1',
+      id: '1',
+      name: 'Test Product 1'
+    });
+    
+    await trackUserAction('modal_open', 'modal', { modalType: 'product-detail' });
+    
+    await trackUserAction('product_view', 'product', { 
+      productId: '2', 
+      productTitle: 'Test Product 2',
+      productName: 'Test Product 2',
+      id: '2',
+      name: 'Test Product 2'
+    });
+    
+    // Reload events
+    setTimeout(loadEvents, 100);
+  };
+
   useEffect(() => {
     loadEvents();
   }, []);
@@ -69,16 +96,18 @@ export default function AnalyticsPage() {
     );
 
     // Count product clicks
-    const totalProductClicks = userActionEvents.filter(
+    const productClickEvents = userActionEvents.filter(
       event => 
         event.data.action === 'product_click' || 
         event.data.action === 'view_details'
-    ).length;
+    );
+    const totalProductClicks = productClickEvents.length;
 
     // Count modal opens
-    const totalModalOpens = userActionEvents.filter(
+    const modalOpenEvents = userActionEvents.filter(
       event => event.data.action === 'modal_open'
-    ).length;
+    );
+    const totalModalOpens = modalOpenEvents.length;
 
     // Count unique sessions
     const uniqueSessions = new Set(
@@ -166,6 +195,24 @@ export default function AnalyticsPage() {
     <Page
       title="Internal Dashboard"
       subtitle={`Data from ${events.length} events`}
+      secondaryActions={[
+        {
+          content: 'Generate Test Data',
+          onAction: generateTestEvents,
+        },
+        {
+          content: 'Clear Data',
+          onAction: async () => {
+            const { analytics } = await import('@/lib/analytics');
+            await analytics.clearEvents();
+            setEvents([]);
+          },
+        },
+        {
+          content: 'Refresh',
+          onAction: loadEvents,
+        },
+      ]}
     >
       <Layout>
         {/* Key Metrics */}
@@ -282,11 +329,19 @@ export default function AnalyticsPage() {
               ) : (
                 <BlockStack gap="200" align="center">
                   <Text as="p" tone="subdued">
-                    No recent activity to display
+                    No analytics data yet. To generate data:
                   </Text>
-                  <Button onClick={() => router.push('/')}>
-                    Visit Products Page
-                  </Button>
+                  <Text as="p" tone="subdued">
+                    1. Visit the Products page and click on products
+                  </Text>
+                  <Text as="p" tone="subdued">
+                    2. Use the search functionality
+                  </Text>
+                  <Text as="p" tone="subdued">
+                    3. Apply filters and interact with the interface
+                  </Text>
+                  <Button onClick={() => router.push('/')}>Visit Products Page</Button>
+                  <Button onClick={generateTestEvents}>Or Generate Test Data</Button>
                 </BlockStack>
               )}
             </BlockStack>
