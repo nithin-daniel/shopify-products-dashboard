@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { 
   Page, 
   Card, 
@@ -14,36 +13,20 @@ import {
   Banner
 } from '@shopify/polaris';
 import { useRouter } from 'next/navigation';
-import { Product, productService } from '@/services';
+import { Product } from '@/services';
+import { useProducts } from '@/hooks';
 import { useAnalytics } from '@/lib/analytics';
+import { useEffect } from 'react';
 
 export default function ProductsPage() {
   const router = useRouter();
   const { track } = useAnalytics();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { products, loading, error, refreshProducts } = useProducts();
 
   useEffect(() => {
-    fetchProducts();
     // Track page load
     track.pageView('/products', 'Products Page');
   }, [track]);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    setError(null);
-
-    const response = await productService.getProducts();
-    
-    if (response.success && response.data) {
-      setProducts(response.data);
-    } else {
-      setError(response.error || 'Failed to fetch products');
-    }
-    
-    setLoading(false);
-  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -87,7 +70,7 @@ export default function ProductsPage() {
       subtitle={`${products.length} products available`}
       primaryAction={{
         content: 'Refresh',
-        onAction: fetchProducts,
+        onAction: refreshProducts,
       }}
       secondaryActions={[
         {
@@ -110,7 +93,10 @@ export default function ProductsPage() {
             <Banner
               title="Error loading products"
               tone="critical"
-              onDismiss={() => setError(null)}
+              action={{
+                content: 'Retry',
+                onAction: refreshProducts,
+              }}
             >
               <p>{error}</p>
             </Banner>

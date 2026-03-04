@@ -133,20 +133,22 @@ export const useProductManagement = (): UseProductManagementReturn => {
           break;
         
         case 'edit':
-          console.log('Edit product:', product.id);
-          // Navigate to edit page or open edit modal
+          // TODO: Implement product edit functionality
+          // router.push(`/products/edit/${product.id}`);
           break;
         
         case 'delete':
           if (confirm(`Are you sure you want to delete "${product.title}"?`)) {
-            console.log('Delete product:', product.id);
-            // Implement delete logic here
+            // TODO: Implement product deletion
+            // await productService.deleteProduct(product.id);
             await refreshProducts();
           }
           break;
         
         default:
-          console.warn('Unknown action:', action);
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Unknown action:', action);
+          }
       }
     } catch (error) {
       console.error('Product action failed:', error);
@@ -162,7 +164,8 @@ export const useProductManagement = (): UseProductManagementReturn => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Added to cart:', state.selectedProduct.title);
+      // TODO: Implement add to cart functionality
+      // await cartService.addItem(state.selectedProduct);
       
       // Close modal after successful action
       closeModal();
@@ -180,7 +183,8 @@ export const useProductManagement = (): UseProductManagementReturn => {
     
     try {
       // Navigate to edit page or open edit form
-      console.log('Edit product:', state.selectedProduct.id);
+      // TODO: Navigate to edit page
+      // router.push(`/products/edit/${state.selectedProduct.id}`);
       closeModal();
     } catch (error) {
       console.error('Failed to edit product:', error);
