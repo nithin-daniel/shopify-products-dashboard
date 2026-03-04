@@ -130,20 +130,10 @@ export default function ProductTablePage() {
   }, [handleRowClick]);
 
   // Close modal
-  const closeModal = useCallback(() => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedProduct(null);
   }, []);
-
-  // Clear all filters
-  const clearAllFilters = useCallback(() => {
-    setSearchQuery('');
-    setPurchaseAvailability([]);
-    setProductTypeFilter([]);
-  }, []);
-
-  // Check if any filters are active
-  const hasActiveFilters = searchQuery.trim() || purchaseAvailability.length > 0 || productTypeFilter.length > 0;
 
   // Bulk action buttons
   const bulkActions = selectedIds.length > 0 && (
@@ -394,7 +384,7 @@ export default function ProductTablePage() {
         <ProductModal
           product={selectedProduct}
           open={isModalOpen}
-          onClose={closeModal}
+          onClose={handleCloseModal}
           showCategory={true}
           showRating={true}
           size="large"
