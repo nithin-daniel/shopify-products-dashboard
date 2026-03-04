@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Page,
   Layout,
@@ -25,11 +25,9 @@ export default function AnalyticsPage() {
   const { track, events, clearEvents, refreshEvents } = useAnalytics();
 
   useEffect(() => {
-    // Track page view
+    // Track page view only once when component mounts
     track.pageView('/analytics', 'Analytics Dashboard');
-    // Refresh events when component mounts
-    refreshEvents();
-  }, [track, refreshEvents]);
+  }, []); // Empty dependency array to run only once
 
   // Calculate metrics from events
   const metrics = useMemo(() => {
@@ -78,11 +76,11 @@ export default function AnalyticsPage() {
       ]);
   }, [events]);
 
-  const handleClearData = async () => {
+  const handleClearData = useCallback(async () => {
     await clearEvents();
-  };
+  }, [clearEvents]);
 
-  const generateTestData = () => {
+  const generateTestData = useCallback(() => {
     // Generate some test events
     for (let i = 1; i <= 5; i++) {
       track.productClick(`product-${i}`, i);
@@ -94,7 +92,7 @@ export default function AnalyticsPage() {
     track.modalOpen('product-detail');
     track.modalOpen('product-detail');
     track.modalOpen('product-detail');
-  };
+  }, [track]);
 
   return (
     <Page

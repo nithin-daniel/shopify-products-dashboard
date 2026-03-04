@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // Analytics event types
 export interface AnalyticsEvent {
@@ -64,9 +64,9 @@ const clearStoredEvents = () => {
 export const useAnalytics = () => {
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
 
-  const loadEvents = () => {
+  const loadEvents = useCallback(() => {
     setEvents(getStoredEvents());
-  };
+  }, []);
 
   useEffect(() => {
     loadEvents();
@@ -74,7 +74,7 @@ export const useAnalytics = () => {
     const handleStorageChange = () => loadEvents();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [loadEvents]);
 
   const track = {
     pageView: (path: string, title: string) => {
@@ -86,7 +86,8 @@ export const useAnalytics = () => {
           metadata: { path, title }
         }
       });
-      loadEvents(); // Refresh events
+      // Use setTimeout to avoid immediate re-render
+      setTimeout(() => loadEvents(), 0);
     },
     userAction: (action: string, target: string, metadata?: any) => {
       storeEvent({
@@ -97,7 +98,7 @@ export const useAnalytics = () => {
           metadata
         }
       });
-      loadEvents(); // Refresh events
+      setTimeout(() => loadEvents(), 0);
     },
     productClick: (productId: string, index: number) => {
       storeEvent({
@@ -108,7 +109,7 @@ export const useAnalytics = () => {
           metadata: { productId, index }
         }
       });
-      loadEvents(); // Refresh events
+      setTimeout(() => loadEvents(), 0);
     },
     modalOpen: (modalType: string) => {
       storeEvent({
@@ -119,7 +120,7 @@ export const useAnalytics = () => {
           metadata: { modalType }
         }
       });
-      loadEvents(); // Refresh events
+      setTimeout(() => loadEvents(), 0);
     },
     modalClose: (modalType: string) => {
       storeEvent({
@@ -130,7 +131,7 @@ export const useAnalytics = () => {
           metadata: { modalType }
         }
       });
-      loadEvents(); // Refresh events
+      setTimeout(() => loadEvents(), 0);
     }
   };
 
@@ -140,7 +141,7 @@ export const useAnalytics = () => {
     getEvents: () => Promise.resolve(getStoredEvents()),
     clearEvents: () => {
       clearStoredEvents();
-      loadEvents();
+      setTimeout(() => loadEvents(), 0);
       return Promise.resolve();
     },
     refreshEvents: loadEvents
