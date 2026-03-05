@@ -56,13 +56,6 @@ shopify-dashboard/
 | `/` | `app/page.tsx` | **Main Dashboard** - Complete product management interface with search, filtering, and analytics tracking |
 | `/analytics` | `app/analytics/page.tsx` | **Internal Dashboard** - Analytics visualization with metrics, event tracking, and data management |
 
-### Product Routes
-
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/products` | `app/products/page.tsx` | Products overview and navigation hub |
-| `/products/table` | `app/products/table/page.tsx` | Dedicated product table view (mirrors main dashboard functionality) |
-
 ### Key Features by Route
 
 #### `/` (Main Dashboard)
